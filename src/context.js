@@ -1,3 +1,5 @@
+// Builds the system prompt with tool schemas injected. 
+// Instructs the model on the JSON protocol and execution rules.
 
 import { getToolSchemas } from "./tools.js";
 

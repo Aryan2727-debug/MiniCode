@@ -1,4 +1,7 @@
-import { readFile, writeFile, listFiles, searchFiles } from "../tools/filesystem.js";
+// Defines tool schemas (name, description, parameters with types and bounds). 
+// Validates args, dispatches to tool functions, handles approval for dangerous operations.
+
+import { readFile, writeFile, deleteFile, listFiles, searchFiles } from "../tools/filesystem.js";
 import { runTests, runLint, runTypecheck, runBuild } from "../tools/shell.js";
 
 const TOOL_SCHEMAS = {
@@ -13,6 +16,12 @@ const TOOL_SCHEMAS = {
     params: {
       path: { type: "string", required: true, description: "File path relative to workspace", maxLength: 1000 },
       content: { type: "string", required: true, description: "File content to write", maxLength: 1000000 },
+    },
+  },
+  delete_file: {
+    description: "Delete a file",
+    params: {
+      path: { type: "string", required: true, description: "File path relative to workspace", maxLength: 1000 },
     },
   },
   list_files: {
@@ -63,6 +72,7 @@ const TOOL_SCHEMAS = {
 const TOOL_FUNCTIONS = {
   read_file: readFile,
   write_file: writeFile,
+  delete_file: deleteFile,
   list_files: listFiles,
   search_files: searchFiles,
   run_tests: runTests,
@@ -71,7 +81,7 @@ const TOOL_FUNCTIONS = {
   run_build: runBuild,
 };
 
-const TOOLS_REQUIRING_APPROVAL = new Set(["write_file"]);
+const TOOLS_REQUIRING_APPROVAL = new Set(["write_file", "delete_file"]);
 
 export function getToolSchemas() {
   return TOOL_SCHEMAS;
@@ -150,7 +160,13 @@ export async function executeToolCall(toolCall, approvalCallback) {
 
   validateArgs(tool, args);
 
-  if (TOOLS_REQUIRING_APPROVAL.has(tool) && approvalCallback) {
+  if (TOOLS_REQUIRING_APPROVAL.has(tool)) {
+    if (!approvalCallback) {
+      return {
+        error: "Operation rejected: approval required but no approval callback available",
+        approved: false,
+      };
+    }
     const approved = await approvalCallback({
       tool,
       args,

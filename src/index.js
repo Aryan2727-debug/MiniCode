@@ -1,3 +1,5 @@
+// CLI entry point. Takes a user message as an argument, runs the agent, prints the result.
+
 import { runAgent } from "./agent.js";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";

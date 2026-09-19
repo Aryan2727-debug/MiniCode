@@ -1,3 +1,9 @@
+// 1. readFile — Read file contents
+// 2. writeFile — Create/replace files (requires approval)
+// 3. deleteFile — Delete a file (requires approval)
+// 4. listFiles — List directory entries
+// 5. searchFiles — Regex search over filenames with depth/match limits, ignores node_modules, .git, etc.
+
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -55,6 +61,12 @@ export async function writeFile({ path: filePath, content }) {
   await fs.writeFile(file, content, "utf8");
 
   return `Updated ${filePath}`;
+}
+
+export async function deleteFile({ path: filePath }) {
+  const file = resolvePath(filePath);
+  await fs.unlink(file);
+  return `Deleted ${filePath}`;
 }
 
 export async function listFiles({ path: dirPath = "." } = {}) {

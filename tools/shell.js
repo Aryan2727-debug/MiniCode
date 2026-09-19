@@ -1,3 +1,8 @@
+// 1. run_tests → npm test
+// 2. run_lint → npm run lint
+// 3. run_typecheck → npm run typecheck
+// 4. run_build → npm run build
+
 import { spawn } from "node:child_process";
 import path from "node:path";
 

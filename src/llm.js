@@ -1,3 +1,5 @@
+// Thin wrapper around the Ollama chat API. Sends messages with format: "json" for structured output.
+
 const OLLAMA_URL = "http://localhost:11434/api/chat";
 
 export async function chat(messages) {
