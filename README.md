@@ -150,6 +150,12 @@ The model must return one of:
 - **Output limits** — Streaming truncation prevents memory exhaustion
 - **Type validation** — All tool args are type-checked with bounds
 
+## Known Issues
+
+1. **Infinite loop on task completion** — The agent sometimes keeps iterating after the task is done instead of returning a final response. The corrective message system and iteration limits don't always stop the loop cleanly.
+2. **Test file creation not working reliably** — The agent struggles to write tests into existing test files. It may create new test files in the wrong directory, skip writing tests entirely, or fail to match the project's test conventions.
+3. **Duplicate function creation** — When improving a function, the agent sometimes appends a new copy of the function with the improvement instead of editing the existing function in place.
+
 ## License
 
 ISC
