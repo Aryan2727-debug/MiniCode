@@ -45,12 +45,14 @@ minicode/
 │   ├── agent.js        # Agent loop (message → LLM → tool → repeat)
 │   ├── llm.js          # Ollama API client
 │   ├── tools.js        # Tool schema definitions, validation, dispatch
-│   └── context.js      # System prompt builder
+│   ├── context.js      # System prompt builder
+│   └── planner.js      # Task planning module
 ├── tools/
 │   ├── filesystem.js   # File operations (read, write, delete, list, search)
 │   └── shell.js        # Preconfigured command execution
 ├── test/
-│   └── agent.test.js   # Agent loop regression tests
+│   ├── agent.test.js   # Agent loop regression tests
+│   └── planner.test.js # Planner module tests
 ├── workspace/          # Default sandbox directory
 ├── prompts/            # (reserved for prompt templates)
 ├── logs/               # (reserved for session logs)
@@ -68,7 +70,11 @@ Core agent loop. Manages conversation history, parses model output, executes too
 
 Includes task state tracking: detects the user's intent (write, delete, test, lint, typecheck, build), tracks whether each required action has succeeded, and prevents the model from returning a `final` response before all requested actions are complete. After a premature `final`, the orchestrator sends a corrective message and continues the loop.
 
-Supports dependency injection of `chatFn` and `executeToolCallFn` for testing.
+Integrates the planner module to generate step-by-step plans for complex tasks. Tracks plan progress and provides step hints to the LLM.
+
+Includes anti-duplicate safeguards: tracks written files to prevent redundant writes, requires reading a file before rewriting it, and blocks creating new test files when existing ones are available.
+
+Supports dependency injection of `chatFn`, `executeToolCallFn`, and `createPlanFn` for testing.
 
 ### `src/llm.js`
 Thin wrapper around the Ollama chat API. Sends messages with `format: "json"` for structured output.
@@ -77,7 +83,10 @@ Thin wrapper around the Ollama chat API. Sends messages with `format: "json"` fo
 Defines tool schemas (name, description, parameters with types and bounds). Validates args, dispatches to tool functions, handles approval for dangerous operations. Approval-fail-closed: tools requiring approval are rejected if no approval callback is available.
 
 ### `src/context.js`
-Builds the system prompt with tool schemas injected. Instructs the model on the JSON protocol and execution rules.
+Builds the system prompt with tool schemas injected. Instructs the model on the JSON protocol and execution rules. Includes task execution rules, anti-duplicate file operation rules, test file conventions, and corrective message guidance.
+
+### `src/planner.js`
+Task planning module. Before executing a complex request, asks the LLM to break it into smaller, concrete steps. Returns a structured plan `{ type: "plan", steps: [{ id, description, status }] }` that the agent follows during execution. All steps start as "pending" and are marked complete only when the corresponding tool call succeeds.
 
 ### `tools/filesystem.js`
 - `readFile` — Read file contents
@@ -101,7 +110,7 @@ Features: workspace sandboxing, streaming output truncation, timeout, approval c
 npm test
 ```
 
-Runs all tests in `test/` using Node's built-in test runner. Tests mock the LLM and tool execution to verify agent loop behavior: multi-step execution, premature final prevention, write-then-test workflow, tool result verification, approval fail-closed, and parse error recovery.
+Runs all tests in `test/` using Node's built-in test runner. Tests mock the LLM and tool execution to verify agent loop behavior: multi-step execution, premature final prevention, write-then-test workflow, tool result verification, approval fail-closed, parse error recovery, and task planning.
 
 ## Usage
 

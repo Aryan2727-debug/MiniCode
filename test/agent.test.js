@@ -49,6 +49,10 @@ function createMockToolCall(toolImplementations) {
   };
 }
 
+function mockNoPlan() {
+  return async () => null;
+}
+
 function finalMsg(content) {
   return JSON.stringify({ type: "final", content: content });
 }
@@ -139,6 +143,7 @@ describe("runAgent", function () {
       const result = await runAgent("create a function and run the tests", {
         chatFn: createMockChat(responses),
         executeToolCallFn: createMockToolCall(),
+        createPlanFn: mockNoPlan(),
       });
 
       assert.equal(result.success, true);
@@ -175,6 +180,7 @@ describe("runAgent", function () {
       const result = await runAgent("write a new module and test it", {
         chatFn: createMockChat(responses),
         executeToolCallFn: createMockToolCall(),
+        createPlanFn: mockNoPlan(),
       });
 
       assert.equal(result.success, true);
@@ -236,6 +242,7 @@ describe("runAgent", function () {
       const result = await runAgent("create a file", {
         chatFn: createMockChat(responses),
         executeToolCallFn: createMockToolCall(),
+        createPlanFn: mockNoPlan(),
       });
 
       assert.equal(result.success, true);
@@ -260,6 +267,7 @@ describe("runAgent", function () {
           }
           return "ok";
         },
+        createPlanFn: mockNoPlan(),
       });
 
       assert.equal(result.success, false);
@@ -345,6 +353,7 @@ describe("runAgent", function () {
       const result = await runAgent("write a file and test it", {
         chatFn: createMockChat(responses),
         executeToolCallFn: createMockToolCall(),
+        createPlanFn: mockNoPlan(),
       });
 
       assert.equal(result.success, true);
